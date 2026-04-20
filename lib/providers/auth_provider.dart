@@ -12,7 +12,7 @@ class AuthProvider extends ChangeNotifier {
     required String email,
     required String phone,
     required String password,
-    required String role, // 🔥 ADD THIS
+    required String role,
   }) async {
     isLoading = true;
     notifyListeners();
@@ -23,20 +23,19 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         phone: phone,
         password: password,
-        role: role, // 🔥 PASS ROLE
+        role: role,
       );
 
       final prefs = await SharedPreferences.getInstance();
-      if (user?.token != null) {
-        await prefs.setString("token", user!.token!);
-      }
+      if (user?.token != null) await prefs.setString("token", user!.token!);
+      // 🔥 SAVE ROLE so sidebar loads correctly
+      await prefs.setString("role", user!.role);
 
       isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
       debugPrint("Register error: $e");
-
       user = null;
       isLoading = false;
       notifyListeners();
@@ -44,7 +43,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // 🔵 LOGIN
   Future<bool> loginUser({
     required String email,
     required String password,
@@ -55,17 +53,16 @@ class AuthProvider extends ChangeNotifier {
     try {
       user = await AuthService.login(email: email, password: password);
 
-      if (user?.token != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("token", user!.token!);
-      }
+      final prefs = await SharedPreferences.getInstance();
+      if (user?.token != null) await prefs.setString("token", user!.token!);
+      // 🔥 SAVE ROLE so sidebar loads correctly
+      await prefs.setString("role", user!.role);
 
       isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
       debugPrint("Login error: $e");
-
       user = null;
       isLoading = false;
       notifyListeners();
@@ -76,7 +73,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> logout() async {
     user = null;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove("token");
+    await prefs.clear(); // 🔥 clear all including role
     notifyListeners();
   }
 }

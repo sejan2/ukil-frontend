@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 🔥 MENU MODEL
 class MenuItem {
   final String title;
   final IconData icon;
-
   MenuItem(this.title, this.icon);
 }
 
@@ -34,7 +32,6 @@ class _AdminSidebarState extends State<AdminSidebar> {
     loadRole();
   }
 
-  /// 🔥 Load role from SharedPreferences
   Future<void> loadRole() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -42,7 +39,6 @@ class _AdminSidebarState extends State<AdminSidebar> {
     });
   }
 
-  /// 🔥 ROLE BASED MENU
   List<MenuItem> getMenuItems() {
     if (role == "admin") {
       return [
@@ -54,7 +50,6 @@ class _AdminSidebarState extends State<AdminSidebar> {
         MenuItem("Notifications", Icons.notifications),
       ];
     }
-
     if (role == "advocate") {
       return [
         MenuItem("Dashboard", Icons.dashboard),
@@ -65,13 +60,20 @@ class _AdminSidebarState extends State<AdminSidebar> {
         MenuItem("Notifications", Icons.notifications),
       ];
     }
-
-    // USER
     return [
       MenuItem("Dashboard", Icons.dashboard),
       MenuItem("Case Requests", Icons.folder_shared),
       MenuItem("Notifications", Icons.notifications),
     ];
+  }
+
+  // 🔥 LOGOUT HELPER
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    if (mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+    }
   }
 
   @override
@@ -82,10 +84,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
       width: 235,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Color(0xFF0B3D2E), // dark green
-            Color(0xFF198754), // primary green
-          ],
+          colors: [Color(0xFF0B3D2E), Color(0xFF198754)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -94,17 +93,12 @@ class _AdminSidebarState extends State<AdminSidebar> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-
-            /// 🔥 PROFILE
             const CircleAvatar(
               radius: 26,
               backgroundColor: Colors.white,
               child: Icon(Icons.person, color: Color(0xFF198754)),
             ),
-
             const SizedBox(height: 10),
-
-            /// ROLE TEXT
             Text(
               role.toUpperCase(),
               style: const TextStyle(
@@ -113,7 +107,6 @@ class _AdminSidebarState extends State<AdminSidebar> {
                 fontSize: 14,
               ),
             ),
-
             const Text(
               "Panel",
               style: TextStyle(
@@ -122,18 +115,14 @@ class _AdminSidebarState extends State<AdminSidebar> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-
             const SizedBox(height: 15),
             const Divider(color: Colors.white24),
-
-            /// 🔥 MENU LIST
             Expanded(
               child: ListView.builder(
                 itemCount: items.length,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 itemBuilder: (context, index) {
                   final isSelected = widget.selectedIndex == index;
-
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     margin: const EdgeInsets.symmetric(vertical: 5),
@@ -148,7 +137,6 @@ class _AdminSidebarState extends State<AdminSidebar> {
                     ),
                     child: ListTile(
                       dense: true,
-
                       leading: Icon(
                         items[index].icon,
                         size: 20,
@@ -156,7 +144,6 @@ class _AdminSidebarState extends State<AdminSidebar> {
                             ? Colors.white
                             : const Color(0xFFB7E4C7),
                       ),
-
                       title: Text(
                         items[index].title,
                         style: TextStyle(
@@ -169,7 +156,6 @@ class _AdminSidebarState extends State<AdminSidebar> {
                               : const Color(0xFFD1FAE5),
                         ),
                       ),
-
                       onTap: () {
                         widget.onItemSelected(index);
                         widget.onItemTapClose?.call();
@@ -179,10 +165,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
                 },
               ),
             ),
-
             const Divider(color: Colors.white24),
-
-            /// 🔥 FOOTER
             const ListTile(
               leading: Icon(Icons.settings, color: Color(0xFFD1FAE5)),
               title: Text(
@@ -194,10 +177,10 @@ class _AdminSidebarState extends State<AdminSidebar> {
                 ),
               ),
             ),
-
-            const ListTile(
-              leading: Icon(Icons.logout, color: Color(0xFFFCA5A5)),
-              title: Text(
+            // 🔥 LOGOUT NOW WORKS
+            ListTile(
+              leading: const Icon(Icons.logout, color: Color(0xFFFCA5A5)),
+              title: const Text(
                 "Logout",
                 style: TextStyle(
                   color: Color(0xFFFCA5A5),
@@ -205,8 +188,8 @@ class _AdminSidebarState extends State<AdminSidebar> {
                   fontSize: 13,
                 ),
               ),
+              onTap: _logout, // 🔥 CONNECTED
             ),
-
             const SizedBox(height: 10),
           ],
         ),

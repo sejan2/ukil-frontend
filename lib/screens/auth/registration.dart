@@ -15,7 +15,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
-
   bool obscurePassword = true;
   String selectedRole = "user";
 
@@ -34,11 +33,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             end: Alignment.bottomRight,
           ),
         ),
-
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
-
             child: Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -52,7 +49,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ],
               ),
-
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -60,10 +56,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     "Create Account",
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-
                   const SizedBox(height: 20),
-
-                  /// 🔥 ROLE SELECT
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -71,25 +64,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         label: const Text("User"),
                         selected: selectedRole == "user",
                         selectedColor: Colors.green,
-                        onSelected: (_) {
-                          setState(() => selectedRole = "user");
-                        },
+                        onSelected: (_) =>
+                            setState(() => selectedRole = "user"),
                       ),
                       const SizedBox(width: 10),
                       ChoiceChip(
                         label: const Text("Advocate"),
                         selected: selectedRole == "advocate",
                         selectedColor: Colors.green,
-                        onSelected: (_) {
-                          setState(() => selectedRole = "advocate");
-                        },
+                        onSelected: (_) =>
+                            setState(() => selectedRole = "advocate"),
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 20),
-
-                  /// NAME
                   TextField(
                     controller: nameController,
                     decoration: const InputDecoration(
@@ -97,10 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: Icon(Icons.person, color: Colors.green),
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
-                  /// EMAIL
                   TextField(
                     controller: emailController,
                     decoration: const InputDecoration(
@@ -108,10 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: Icon(Icons.email, color: Colors.green),
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
-                  /// PHONE
                   TextField(
                     controller: phoneController,
                     decoration: const InputDecoration(
@@ -119,10 +101,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: Icon(Icons.phone, color: Colors.green),
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
-                  /// PASSWORD
                   TextField(
                     controller: passwordController,
                     obscureText: obscurePassword,
@@ -135,18 +114,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ? Icons.visibility_off
                               : Icons.visibility,
                         ),
-                        onPressed: () {
-                          setState(() {
-                            obscurePassword = !obscurePassword;
-                          });
-                        },
+                        onPressed: () =>
+                            setState(() => obscurePassword = !obscurePassword),
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
-                  /// 🔥 REGISTER BUTTON (FIXED)
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -154,7 +127,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed: auth.isLoading
                           ? null
                           : () async {
-                              /// 🔥 BASIC VALIDATION
                               if (nameController.text.isEmpty ||
                                   emailController.text.isEmpty ||
                                   phoneController.text.isEmpty ||
@@ -167,16 +139,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 return;
                               }
 
-                              /// 🔥 CALL API WITH ROLE
                               final success = await auth.registerUser(
                                 name: nameController.text.trim(),
                                 email: emailController.text.trim(),
                                 phone: phoneController.text.trim(),
                                 password: passwordController.text.trim(),
-                                role: selectedRole, // ✅ FIXED
+                                role: selectedRole,
                               );
 
-                              /// ❌ FAIL
                               if (!success) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -186,7 +156,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 return;
                               }
 
-                              /// ✅ SUCCESS MESSAGE
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
@@ -197,11 +166,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                               );
 
-                              /// 🔥 NAVIGATION
+                              // 🔥 ADVOCATE always goes to pending after register
                               Navigator.pushReplacementNamed(
                                 context,
                                 selectedRole == "advocate"
-                                    ? AppRoutes.advocate
+                                    ? AppRoutes.advocatePending
                                     : AppRoutes.client,
                               );
                             },

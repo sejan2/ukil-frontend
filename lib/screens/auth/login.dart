@@ -13,7 +13,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-
   bool obscurePassword = true;
 
   @override
@@ -31,11 +30,9 @@ class _LoginScreenState extends State<LoginScreen> {
             end: Alignment.bottomRight,
           ),
         ),
-
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
-
             child: Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -49,7 +46,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -57,10 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     "Welcome Back",
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-
                   const SizedBox(height: 25),
-
-                  /// EMAIL
                   TextField(
                     controller: emailController,
                     decoration: const InputDecoration(
@@ -68,10 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       prefixIcon: Icon(Icons.email, color: Colors.green),
                     ),
                   ),
-
                   const SizedBox(height: 12),
-
-                  /// PASSWORD
                   TextField(
                     controller: passwordController,
                     obscureText: obscurePassword,
@@ -84,18 +74,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               ? Icons.visibility_off
                               : Icons.visibility,
                         ),
-                        onPressed: () {
-                          setState(() {
-                            obscurePassword = !obscurePassword;
-                          });
-                        },
+                        onPressed: () =>
+                            setState(() => obscurePassword = !obscurePassword),
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
-                  /// 🔥 LOGIN BUTTON (FIXED)
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -103,7 +87,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: auth.isLoading
                           ? null
                           : () async {
-                              /// 🔥 VALIDATION
                               if (emailController.text.isEmpty ||
                                   passwordController.text.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -114,13 +97,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 return;
                               }
 
-                              /// 🔥 CALL LOGIN
                               final success = await auth.loginUser(
                                 email: emailController.text.trim(),
                                 password: passwordController.text.trim(),
                               );
 
-                              /// ❌ LOGIN FAILED
                               if (!success || auth.user == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -130,8 +111,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                 return;
                               }
 
-                              /// ✅ ROLE BASED NAVIGATION
                               final role = auth.user!.role;
+
+                              // 🔥 ADVOCATE: check approval before navigating
+                              if (role == "advocate") {
+                                if (!auth.user!.isApproved) {
+                                  Navigator.pushReplacementNamed(
+                                    context,
+                                    AppRoutes.advocatePending,
+                                  );
+                                  return;
+                                }
+                              }
 
                               Navigator.pushReplacementNamed(
                                 context,
@@ -150,13 +141,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           : const Text("LOGIN"),
                     ),
                   ),
-
                   const SizedBox(height: 15),
-
                   TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, AppRoutes.register);
-                    },
+                    onPressed: () =>
+                        Navigator.pushNamed(context, AppRoutes.register),
                     child: const Text(
                       "Don't have an account? Register",
                       style: TextStyle(color: Colors.green),

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-
-// Screens
 import '../screens/auth/login.dart';
 import '../screens/auth/registration.dart';
 import '../screens/home_screen.dart';
 import '../screens/homeBottom/advocates.dart';
 import '../screens/admin/admin_panel.dart';
 import '../screens/advocate/advocate_panel.dart';
+import '../screens/advocate/advocate_pending_screen.dart'; // 🔥 NEW
 import '../screens/client/client_panel.dart';
 
 class AppRoutes {
@@ -16,31 +15,27 @@ class AppRoutes {
   static const String advocates = '/advocates';
   static const String admin = '/admin';
   static const String advocate = '/advocate';
+  static const String advocatePending = '/advocate/pending'; // 🔥 NEW
   static const String client = '/client';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
-
       case register:
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
-
       case home:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
-
       case advocates:
         return MaterialPageRoute(builder: (_) => const AdvocatesScreen());
-
       case admin:
         return MaterialPageRoute(builder: (_) => const AdminPanel());
-
       case advocate:
         return MaterialPageRoute(builder: (_) => const AdvocatePanel());
-
+      case advocatePending: // 🔥 NEW
+        return MaterialPageRoute(builder: (_) => const AdvocatePendingScreen());
       case client:
         return MaterialPageRoute(builder: (_) => const ClientPanel());
-
       default:
         return MaterialPageRoute(
           builder: (_) =>
@@ -49,7 +44,6 @@ class AppRoutes {
     }
   }
 
-  // 🔥 SAFE ROLE ROUTING (NEW)
   static String getRouteByRole(String? role) {
     switch (role) {
       case "admin":

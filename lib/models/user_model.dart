@@ -3,8 +3,9 @@ class UserModel {
   final String name;
   final String email;
   final String phone;
-  final String role; // 🔥 ADD THIS
+  final String role;
   final String? token;
+  final bool isApproved; // 🔥 NEW
 
   UserModel({
     this.id,
@@ -13,6 +14,7 @@ class UserModel {
     required this.phone,
     required this.role,
     this.token,
+    this.isApproved = false, // 🔥 NEW
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -21,8 +23,9 @@ class UserModel {
       name: json['name'] ?? '',
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
-      role: json['role'] ?? 'user', // 🔥 FIX
+      role: json['role'] ?? 'user',
       token: json['token'],
+      isApproved: json['isApproved'] ?? json['is_approved'] ?? false, // 🔥 NEW
     );
   }
 
