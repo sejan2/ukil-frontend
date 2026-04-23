@@ -34,20 +34,18 @@ class _AdminSidebarState extends State<AdminSidebar> {
 
   Future<void> loadRole() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      role = prefs.getString("role") ?? "user";
-    });
+    setState(() => role = prefs.getString("role") ?? "user");
   }
 
   List<MenuItem> getMenuItems() {
     if (role == "admin") {
       return [
         MenuItem("Dashboard", Icons.dashboard),
-        MenuItem("Upload Lawyers", Icons.upload_file),
-        MenuItem("Manage Lawyers", Icons.people),
-        MenuItem("Upcoming Hearing", Icons.event),
-        MenuItem("Blog Upload", Icons.article),
-        MenuItem("Notifications", Icons.notifications),
+        MenuItem("Approve Advocates", Icons.approval), // 🔥 index 1
+        MenuItem("Upload Lawyers", Icons.upload_file), // index 2
+        MenuItem("Manage Lawyers", Icons.people), // index 3
+        MenuItem("Upcoming Hearing", Icons.event), // index 4
+        MenuItem("Blog Upload", Icons.article), // index 5
       ];
     }
     if (role == "advocate") {
@@ -67,7 +65,6 @@ class _AdminSidebarState extends State<AdminSidebar> {
     ];
   }
 
-  // 🔥 LOGOUT HELPER
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -177,7 +174,6 @@ class _AdminSidebarState extends State<AdminSidebar> {
                 ),
               ),
             ),
-            // 🔥 LOGOUT NOW WORKS
             ListTile(
               leading: const Icon(Icons.logout, color: Color(0xFFFCA5A5)),
               title: const Text(
@@ -188,7 +184,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
                   fontSize: 13,
                 ),
               ),
-              onTap: _logout, // 🔥 CONNECTED
+              onTap: _logout,
             ),
             const SizedBox(height: 10),
           ],

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../widgets/forall/sidebar.dart';
-
-import '../advocate/blog_screen.dart';
 import '../advocate/edit_profile.dart';
+import '../advocate/manage_cases.dart'; // 🔥 NEW
 import '../advocate/hearing_screen.dart';
-import '../advocate/notification.dart';
+import '../advocate/blog_screen.dart';
+import '../advocate/notification.dart'; // 🔥 NEW
 
 class AdvocatePanel extends StatefulWidget {
   const AdvocatePanel({super.key});
@@ -23,38 +23,22 @@ class _AdvocatePanelState extends State<AdvocatePanel> {
 
     return Scaffold(
       appBar: isMobile ? AppBar(title: const Text("Advocate Panel")) : null,
-
-      /// 📱 MOBILE DRAWER
       drawer: isMobile
           ? Drawer(
               child: AdminSidebar(
                 selectedIndex: selectedIndex,
-                onItemSelected: (index) {
-                  setState(() {
-                    selectedIndex = index;
-                  });
-                },
-                onItemTapClose: () {
-                  Navigator.pop(context);
-                },
+                onItemSelected: (i) => setState(() => selectedIndex = i),
+                onItemTapClose: () => Navigator.pop(context),
               ),
             )
           : null,
-
       body: Row(
         children: [
-          /// 💻 WEB SIDEBAR
           if (!isMobile)
             AdminSidebar(
               selectedIndex: selectedIndex,
-              onItemSelected: (index) {
-                setState(() {
-                  selectedIndex = index;
-                });
-              },
+              onItemSelected: (i) => setState(() => selectedIndex = i),
             ),
-
-          /// RIGHT CONTENT
           Expanded(
             child: Container(
               color: Colors.grey[50],
@@ -67,36 +51,29 @@ class _AdvocatePanelState extends State<AdvocatePanel> {
     );
   }
 
-  /// 🔥 ADVOCATE ROUTING
   Widget _buildContent() {
     switch (selectedIndex) {
       case 0:
-        return _dashboardUI();
-
+        return _dashboard();
       case 1:
-        return const EditProfileScreen(); // Edit My Profile
-
+        return const EditProfileScreen(); // Edit Profile
       case 2:
-        return const BlogScreen(); // Manage Cases / Upcoming content
-
+        return const ManageCasesScreen(); // 🔥 Manage Cases
       case 3:
         return const HearingScreen(); // Upcoming Hearing
-
       case 4:
-        return const NotificationScreen(); // Notifications
-
+        return const BlogScreen(); // Blog
+      case 5:
+        return const NotificationScreen(); // 🔥 Notifications
       default:
-        return const Center(child: Text("Advocate Dashboard"));
+        return _dashboard();
     }
   }
 
-  /// 🟢 DASHBOARD UI
-  Widget _dashboardUI() {
-    return const Center(
-      child: Text(
-        "Advocate Dashboard Overview",
-        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
+  Widget _dashboard() => const Center(
+    child: Text(
+      "Advocate Dashboard Overview",
+      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+    ),
+  );
 }

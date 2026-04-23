@@ -11,9 +11,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  bool obscurePassword = true;
+  final emailCtrl = TextEditingController();
+  final passwordCtrl = TextEditingController();
+  bool obscure = true;
 
   @override
   Widget build(BuildContext context) {
@@ -54,85 +54,40 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 25),
+
+                  // EMAIL
                   TextField(
-                    controller: emailController,
+                    controller: emailCtrl,
                     decoration: const InputDecoration(
                       hintText: "Email",
                       prefixIcon: Icon(Icons.email, color: Colors.green),
                     ),
                   ),
                   const SizedBox(height: 12),
+
+                  // PASSWORD
                   TextField(
-                    controller: passwordController,
-                    obscureText: obscurePassword,
+                    controller: passwordCtrl,
+                    obscureText: obscure,
                     decoration: InputDecoration(
                       hintText: "Password",
                       prefixIcon: const Icon(Icons.lock, color: Colors.green),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          obscurePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
+                          obscure ? Icons.visibility_off : Icons.visibility,
                         ),
-                        onPressed: () =>
-                            setState(() => obscurePassword = !obscurePassword),
+                        onPressed: () => setState(() => obscure = !obscure),
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
+
+                  // LOGIN BUTTON
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: auth.isLoading
-                          ? null
-                          : () async {
-                              if (emailController.text.isEmpty ||
-                                  passwordController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Enter email & password"),
-                                  ),
-                                );
-                                return;
-                              }
-
-                              final success = await auth.loginUser(
-                                email: emailController.text.trim(),
-                                password: passwordController.text.trim(),
-                              );
-
-                              if (!success || auth.user == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Invalid email or password"),
-                                  ),
-                                );
-                                return;
-                              }
-
-                              final role = auth.user!.role;
-
-                              // 🔥 ADVOCATE: check approval before navigating
-                              if (role == "advocate") {
-                                if (!auth.user!.isApproved) {
-                                  Navigator.pushReplacementNamed(
-                                    context,
-                                    AppRoutes.advocatePending,
-                                  );
-                                  return;
-                                }
-                              }
-
-                              Navigator.pushReplacementNamed(
-                                context,
-                                role == "admin"
-                                    ? AppRoutes.admin
-                                    : role == "advocate"
-                                    ? AppRoutes.advocate
-                                    : AppRoutes.client,
-                              );
-                            },
+                      onPressed: auth.isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                       ),
@@ -142,6 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 15),
+
                   TextButton(
                     onPressed: () =>
                         Navigator.pushNamed(context, AppRoutes.register),
@@ -157,5 +113,53 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleLogin() async {
+    if (emailCtrl.text.isEmpty || passwordCtrl.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Enter email & password")));
+      return;
+    }
+
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+
+    final success = await auth.loginUser(
+      email: emailCtrl.text.trim(),
+      password: passwordCtrl.text.trim(),
+    );
+
+    // 🔥 CASE 1: advocate not approved yet → pending screen
+    if (!success && auth.isPending) {
+      Navigator.pushReplacementNamed(context, AppRoutes.advocatePending);
+      return;
+    }
+
+    // 🔥 CASE 2: wrong credentials or other error
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Invalid email or password")),
+      );
+      return;
+    }
+
+    // 🔥 CASE 3: success → route by role
+    final role = auth.user!.role;
+    Navigator.pushReplacementNamed(
+      context,
+      role == "admin"
+          ? AppRoutes.admin
+          : role == "advocate"
+          ? AppRoutes.advocate
+          : AppRoutes.client,
+    );
+  }
+
+  @override
+  void dispose() {
+    emailCtrl.dispose();
+    passwordCtrl.dispose();
+    super.dispose();
   }
 }

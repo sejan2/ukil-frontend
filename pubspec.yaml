@@ -20,6 +20,10 @@ dependencies:
   http: ^1.2.2
   shared_preferences: ^2.5.5
 
+  # 📸 IMAGE PICKER (ADD HERE)
+  image_picker: ^1.1.2
+  file_picker: ^8.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

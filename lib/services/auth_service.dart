@@ -5,13 +5,12 @@ import '../models/user_model.dart';
 class AuthService {
   static const String baseUrl = "http://10.0.2.2:5000/api/auth";
 
-  // 🔥 REGISTER
   static Future<UserModel> register({
     required String name,
     required String email,
     required String phone,
     required String password,
-    required String role, // ✅ ADD
+    required String role,
   }) async {
     final response = await http.post(
       Uri.parse("$baseUrl/register"),
@@ -21,20 +20,16 @@ class AuthService {
         "email": email,
         "phone": phone,
         "password": password,
-        "role": role, // ✅ SEND ROLE
+        "role": role,
       }),
     );
-
     final data = jsonDecode(response.body);
-
     if (response.statusCode == 200 || response.statusCode == 201) {
       return UserModel.fromJson({...data['user'], "token": data['token']});
-    } else {
-      throw Exception(data['message'] ?? "Registration failed");
     }
+    throw Exception(data['message'] ?? "Registration failed");
   }
 
-  // 🔵 LOGIN
   static Future<UserModel> login({
     required String email,
     required String password,
@@ -44,17 +39,30 @@ class AuthService {
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"email": email, "password": password}),
     );
-
     final data = jsonDecode(response.body);
 
+    // ✅ 200 — login success
     if (response.statusCode == 200) {
       if (data['user'] == null || data['token'] == null) {
         throw Exception("Invalid response from server");
       }
-
       return UserModel.fromJson({...data['user'], "token": data['token']});
-    } else {
-      throw Exception(data['message'] ?? "Login failed");
     }
+
+    // 🔥 403 — advocate not approved yet (or deactivated)
+    // Throw with the exact backend message so UI can catch it
+    if (response.statusCode == 403) {
+      throw AdvocatePendingException(
+        data['message'] ?? "Account pending approval",
+      );
+    }
+
+    throw Exception(data['message'] ?? "Login failed");
   }
+}
+
+// 🔥 Custom exception so we can identify pending advocates
+class AdvocatePendingException implements Exception {
+  final String message;
+  AdvocatePendingException(this.message);
 }

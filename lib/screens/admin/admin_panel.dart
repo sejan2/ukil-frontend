@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../widgets/forall/sidebar.dart';
-
+import '../admin/approve_advocates_screen.dart';
 import '../admin/add_lawyer_screen.dart';
-
 import '../admin/blog_screen.dart';
 import '../admin/hearing_screen.dart';
 import '../admin/lawyer_list_screen.dart';
@@ -24,40 +23,23 @@ class _AdminPanelState extends State<AdminPanel> {
 
     return Scaffold(
       appBar: isMobile ? AppBar(title: const Text("Admin Panel")) : null,
-
-      /// 📱 MOBILE DRAWER
       drawer: isMobile
           ? Drawer(
               child: AdminSidebar(
                 selectedIndex: selectedIndex,
-                onItemSelected: (index) {
-                  setState(() {
-                    selectedIndex = index;
-                  });
-                },
-
-                /// 🔥 CLOSE DRAWER AFTER CLICK
-                onItemTapClose: () {
-                  Navigator.pop(context);
-                },
+                onItemSelected: (index) =>
+                    setState(() => selectedIndex = index),
+                onItemTapClose: () => Navigator.pop(context),
               ),
             )
           : null,
-
       body: Row(
         children: [
-          /// 💻 WEB SIDEBAR
           if (!isMobile)
             AdminSidebar(
               selectedIndex: selectedIndex,
-              onItemSelected: (index) {
-                setState(() {
-                  selectedIndex = index;
-                });
-              },
+              onItemSelected: (index) => setState(() => selectedIndex = index),
             ),
-
-          /// RIGHT CONTENT
           Expanded(
             child: Container(
               color: Colors.grey[50],
@@ -70,30 +52,25 @@ class _AdminPanelState extends State<AdminPanel> {
     );
   }
 
-  /// 🔥 NAVIGATION FIXED (NO MISMATCH)
   Widget _buildContent() {
     switch (selectedIndex) {
       case 0:
         return _dashboardUI();
-
       case 1:
-        return const AddLawyerScreen(); // Upload Lawyers
-
+        return const ApproveAdvocatesScreen(); // 🔥 APPROVE ADVOCATES
       case 2:
-        return const LawyerListScreen(); // Manage Lawyers
-
+        return const AddLawyerScreen();
       case 3:
-        return const HearingScreen(); // Upcoming Hearing
-
+        return const LawyerListScreen();
       case 4:
-        return const BlogScreen(); // Blog Upload
-
+        return const HearingScreen();
+      case 5:
+        return const BlogScreen();
       default:
         return const Center(child: Text("Dashboard"));
     }
   }
 
-  /// 🟢 DASHBOARD UI
   Widget _dashboardUI() {
     return const Center(
       child: Text(

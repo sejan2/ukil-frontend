@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../services/public_service.dart';
+import 'advocate_profile_view.dart';
 
 class AdvocatesScreen extends StatefulWidget {
   const AdvocatesScreen({super.key});
@@ -8,7 +10,92 @@ class AdvocatesScreen extends StatefulWidget {
 }
 
 class _AdvocatesScreenState extends State<AdvocatesScreen> {
+  List<Map<String, dynamic>> advocates = [];
+  bool isLoading = true;
+  bool isLoadingMore = false;
+  int currentPage = 1;
+  int total = 0;
   int selectedIndex = -1;
+  String selectedPractice = '';
+
+  final searchCtrl = TextEditingController();
+  final practices = [
+    "All",
+    "Criminal",
+    "Family",
+    "Corporate",
+    "Real Estate",
+    "Civil",
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _load(reset: true);
+    // search on pause (debounce)
+    searchCtrl.addListener(_onSearch);
+  }
+
+  String? _debounce;
+  void _onSearch() async {
+    final q = searchCtrl.text;
+    _debounce = q;
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (_debounce == q) _load(reset: true);
+  }
+
+  Future<void> _load({bool reset = false}) async {
+    if (reset) {
+      setState(() {
+        isLoading = true;
+        currentPage = 1;
+        advocates = [];
+      });
+    } else {
+      setState(() => isLoadingMore = true);
+    }
+
+    try {
+      final res = await PublicService.browseAdvocates(
+        name: searchCtrl.text.trim().isEmpty ? null : searchCtrl.text.trim(),
+        practice: (selectedPractice.isEmpty || selectedPractice == 'All')
+            ? null
+            : selectedPractice,
+        page: currentPage,
+        limit: 12,
+      );
+
+      final newList = List<Map<String, dynamic>>.from(res['advocates']);
+      setState(() {
+        advocates = reset ? newList : [...advocates, ...newList];
+        total = res['total'];
+        isLoading = false;
+        isLoadingMore = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        isLoadingMore = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
+    }
+  }
+
+  void _selectPractice(String p) {
+    setState(() => selectedPractice = p == 'All' ? '' : p);
+    _load(reset: true);
+  }
+
+  void _loadMore() {
+    currentPage++;
+    _load();
+  }
+
+  bool get _hasMore => advocates.length < total;
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +111,11 @@ class _AdvocatesScreenState extends State<AdvocatesScreen> {
         children: [
           const SizedBox(height: 10),
 
-          // 🔍 Search Bar
+          // 🔍 SEARCH BAR
           TextField(
+            controller: searchCtrl,
             decoration: InputDecoration(
-              hintText: "Search lawyers...",
+              hintText: "Search lawyers by name...",
               prefixIcon: const Icon(Icons.search),
               filled: true,
               fillColor: Colors.white,
@@ -40,7 +128,7 @@ class _AdvocatesScreenState extends State<AdvocatesScreen> {
 
           const SizedBox(height: 16),
 
-          // 🟢 FIND LAWYER BOX
+          // 🟢 HEADER BOX
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -49,8 +137,8 @@ class _AdvocatesScreenState extends State<AdvocatesScreen> {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
+              children: [
+                const Text(
                   "Find a Lawyer",
                   style: TextStyle(
                     color: Colors.white,
@@ -58,10 +146,10 @@ class _AdvocatesScreenState extends State<AdvocatesScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 Text(
-                  "Over 15 categories and 100+ lawyers available",
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                  "$total approved advocates available",
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
                 ),
               ],
             ),
@@ -69,49 +157,103 @@ class _AdvocatesScreenState extends State<AdvocatesScreen> {
 
           const SizedBox(height: 16),
 
-          // 🧩 Category Chips
+          // 🧩 PRACTICE AREA CHIPS
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: [
-                _chip("Criminal"),
-                _chip("Family"),
-                _chip("Corporate"),
-                _chip("Real Estate"),
-              ],
+              children: practices.map((p) {
+                final isActive =
+                    (p == 'All' && selectedPractice.isEmpty) ||
+                    selectedPractice == p;
+                return GestureDetector(
+                  onTap: () => _selectPractice(p),
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 10),
+                    child: Chip(
+                      label: Text(p),
+                      backgroundColor: isActive
+                          ? Colors.green
+                          : Colors.green.shade50,
+                      labelStyle: TextStyle(
+                        color: isActive ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           ),
 
           const SizedBox(height: 16),
 
-          // 👨‍⚖️ Advocate List
-          ...dummyAdvocates.asMap().entries.map((entry) {
-            int index = entry.key;
-            var advocate = entry.value;
-            return _advocateCard(advocate, index);
-          }).toList(),
+          // 👨‍⚖️ ADVOCATE LIST
+          if (isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(40),
+                child: CircularProgressIndicator(color: Colors.green),
+              ),
+            )
+          else if (advocates.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(40),
+                child: Text(
+                  "No advocates found",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            )
+          else ...[
+            ...advocates.asMap().entries.map(
+              (e) => _advocateCard(e.value, e.key),
+            ),
+
+            // LOAD MORE
+            if (_hasMore)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: isLoadingMore
+                      ? const CircularProgressIndicator(color: Colors.green)
+                      : OutlinedButton(
+                          onPressed: _loadMore,
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.green),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: const Text(
+                            "Load More",
+                            style: TextStyle(color: Colors.green),
+                          ),
+                        ),
+                ),
+              ),
+          ],
         ],
       ),
     );
   }
 
-  // 🔘 Chip Widget
-  Widget _chip(String text) {
-    return Container(
-      margin: const EdgeInsets.only(right: 10),
-      child: Chip(label: Text(text), backgroundColor: Colors.green.shade50),
-    );
-  }
-
-  // 👤 Advocate Card
-  Widget _advocateCard(Map<String, dynamic> data, int index) {
-    bool isSelected = selectedIndex == index;
+  Widget _advocateCard(Map<String, dynamic> a, int index) {
+    final isSelected = selectedIndex == index;
+    final photoUrl = a['photo_url'];
+    final areas = a['practice_areas'];
+    final specialty = areas is List
+        ? (areas as List).take(2).join(', ')
+        : areas?.toString() ?? 'General';
 
     return GestureDetector(
       onTap: () {
-        setState(() {
-          selectedIndex = index;
-        });
+        setState(() => selectedIndex = index);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AdvocateProfileView(advocateId: a['id'].toString()),
+          ),
+        );
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -130,21 +272,27 @@ class _AdvocatesScreenState extends State<AdvocatesScreen> {
         ),
         child: Row(
           children: [
-            // Profile Image
+            // PHOTO
             CircleAvatar(
               radius: 30,
-              backgroundImage: NetworkImage(data['image']),
+              backgroundColor: Colors.green.withOpacity(0.1),
+              backgroundImage: photoUrl != null
+                  ? NetworkImage("http://10.0.2.2:5000$photoUrl")
+                  : null,
+              child: photoUrl == null
+                  ? const Icon(Icons.person, color: Colors.green)
+                  : null,
             ),
 
             const SizedBox(width: 12),
 
-            // Info
+            // INFO
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    data['name'],
+                    a['name'] ?? '',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -153,20 +301,26 @@ class _AdvocatesScreenState extends State<AdvocatesScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    data['speciality'],
+                    specialty,
                     style: TextStyle(
                       color: isSelected ? Colors.white70 : Colors.grey[600],
+                      fontSize: 13,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.star, color: Colors.orange, size: 16),
-                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.location_on,
+                        size: 13,
+                        color: isSelected ? Colors.white70 : Colors.grey,
+                      ),
+                      const SizedBox(width: 3),
                       Text(
-                        data['rating'].toString(),
+                        a['district'] ?? '',
                         style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black,
+                          fontSize: 12,
+                          color: isSelected ? Colors.white70 : Colors.grey[600],
                         ),
                       ),
                     ],
@@ -175,10 +329,10 @@ class _AdvocatesScreenState extends State<AdvocatesScreen> {
               ),
             ),
 
-            // Status Dot
+            // ARROW
             Icon(
-              Icons.circle,
-              size: 10,
+              Icons.arrow_forward_ios,
+              size: 14,
               color: isSelected ? Colors.white : Colors.green,
             ),
           ],
@@ -186,32 +340,10 @@ class _AdvocatesScreenState extends State<AdvocatesScreen> {
       ),
     );
   }
-}
 
-// 📦 Dummy Data
-final List<Map<String, dynamic>> dummyAdvocates = [
-  {
-    "name": "Barr. John Doe",
-    "speciality": "Criminal Lawyer",
-    "rating": 4.5,
-    "image": "https://randomuser.me/api/portraits/men/1.jpg",
-  },
-  {
-    "name": "Barr. Sarah Smith",
-    "speciality": "Family Lawyer",
-    "rating": 4.8,
-    "image": "https://randomuser.me/api/portraits/women/2.jpg",
-  },
-  {
-    "name": "Barr. Alex Johnson",
-    "speciality": "Corporate Lawyer",
-    "rating": 4.3,
-    "image": "https://randomuser.me/api/portraits/men/3.jpg",
-  },
-  {
-    "name": "Barr. Emily Davis",
-    "speciality": "Real Estate Lawyer",
-    "rating": 4.7,
-    "image": "https://randomuser.me/api/portraits/women/4.jpg",
-  },
-];
+  @override
+  void dispose() {
+    searchCtrl.dispose();
+    super.dispose();
+  }
+}

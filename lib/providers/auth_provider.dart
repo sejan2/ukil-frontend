@@ -5,6 +5,8 @@ import '../services/auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   bool isLoading = false;
+  bool isPending = false; // 🔥 NEW — true when advocate not approved
+  String pendingMessage = '';
   UserModel? user;
 
   Future<bool> registerUser({
@@ -16,7 +18,6 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     isLoading = true;
     notifyListeners();
-
     try {
       user = await AuthService.register(
         name: name,
@@ -25,12 +26,9 @@ class AuthProvider extends ChangeNotifier {
         password: password,
         role: role,
       );
-
       final prefs = await SharedPreferences.getInstance();
       if (user?.token != null) await prefs.setString("token", user!.token!);
-      // 🔥 SAVE ROLE so sidebar loads correctly
       await prefs.setString("role", user!.role);
-
       isLoading = false;
       notifyListeners();
       return true;
@@ -48,21 +46,28 @@ class AuthProvider extends ChangeNotifier {
     required String password,
   }) async {
     isLoading = true;
+    isPending = false;
     notifyListeners();
 
     try {
       user = await AuthService.login(email: email, password: password);
-
       final prefs = await SharedPreferences.getInstance();
       if (user?.token != null) await prefs.setString("token", user!.token!);
-      // 🔥 SAVE ROLE so sidebar loads correctly
       await prefs.setString("role", user!.role);
-
       isLoading = false;
       notifyListeners();
       return true;
+    } on AdvocatePendingException catch (e) {
+      // 🔥 Advocate not approved — set flag, don't treat as error
+      isPending = true;
+      pendingMessage = e.message;
+      user = null;
+      isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
       debugPrint("Login error: $e");
+      isPending = false;
       user = null;
       isLoading = false;
       notifyListeners();
@@ -72,8 +77,9 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     user = null;
+    isPending = false;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // 🔥 clear all including role
+    await prefs.clear();
     notifyListeners();
   }
 }

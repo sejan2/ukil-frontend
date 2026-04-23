@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../widgets/forall/sidebar.dart';
-
-import '../client/case_request.dart';
-import '../client/notification.dart';
+import '../client/case_request.dart'; // 🔥 REAL SCREEN
+import '../client/notification.dart'; // 🔥 REAL SCREEN
 
 class ClientPanel extends StatefulWidget {
   const ClientPanel({super.key});
@@ -21,38 +20,22 @@ class _ClientPanelState extends State<ClientPanel> {
 
     return Scaffold(
       appBar: isMobile ? AppBar(title: const Text("Client Panel")) : null,
-
-      /// 📱 MOBILE DRAWER
       drawer: isMobile
           ? Drawer(
               child: AdminSidebar(
                 selectedIndex: selectedIndex,
-                onItemSelected: (index) {
-                  setState(() {
-                    selectedIndex = index;
-                  });
-                },
-                onItemTapClose: () {
-                  Navigator.pop(context);
-                },
+                onItemSelected: (i) => setState(() => selectedIndex = i),
+                onItemTapClose: () => Navigator.pop(context),
               ),
             )
           : null,
-
       body: Row(
         children: [
-          /// 💻 WEB SIDEBAR
           if (!isMobile)
             AdminSidebar(
               selectedIndex: selectedIndex,
-              onItemSelected: (index) {
-                setState(() {
-                  selectedIndex = index;
-                });
-              },
+              onItemSelected: (i) => setState(() => selectedIndex = i),
             ),
-
-          /// RIGHT CONTENT
           Expanded(
             child: Container(
               color: Colors.grey[50],
@@ -65,30 +48,23 @@ class _ClientPanelState extends State<ClientPanel> {
     );
   }
 
-  /// 🔥 CLIENT ROUTING
   Widget _buildContent() {
     switch (selectedIndex) {
       case 0:
-        return _dashboardUI();
-
+        return _dashboard();
       case 1:
-        return const CaseRequestScreen(); // Case Requests
-
+        return const CaseRequestScreen(); // 🔥 My Cases
       case 2:
-        return const NotificationScreen(); // Notifications
-
+        return const NotificationScreen(); // 🔥 Notifications
       default:
-        return const Center(child: Text("Client Dashboard"));
+        return _dashboard();
     }
   }
 
-  /// 🟢 DASHBOARD UI
-  Widget _dashboardUI() {
-    return const Center(
-      child: Text(
-        "Client Dashboard Overview",
-        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
+  Widget _dashboard() => const Center(
+    child: Text(
+      "Client Dashboard Overview",
+      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+    ),
+  );
 }
